@@ -64,5 +64,14 @@ func registerRoutes(router *gin.Engine, db *sql.DB) {
 		ctx.JSON(http.StatusOK, gin.H{"message": "Stats endpoint"})
 	})
 	api.GET("analytics", analyticsHandlers.GetDashboardData)
+	api.GET("analytics/top-products-visits", analyticsHandlers.GetTopProductsVisits)
+	api.GET("analytics/visits-per-day", analyticsHandlers.GetVisitsPerDay)
+	api.GET("analytics/visits-per-month", analyticsHandlers.GetVisitsPerMonth)
+	api.GET("analytics/visits-per-country", analyticsHandlers.GetVisitsPerCountry)
+	api.GET("analytics/visits-per-city", analyticsHandlers.GetVisitsPerCity)
+	api.GET("analytics/visits-from-egypt-per-day", analyticsHandlers.GetVisitsFromEgyptPerDay)
+	api.GET("analytics/visits-from-other-countries-per-day", analyticsHandlers.GetVisitsFromOtherCountriesPerDay)
+	api.GET("analytics/visits-from-egypt-per-hour-past-month", analyticsHandlers.GetVisitsFromEgyptPerHourForPastMonth)
+	api.GET("analytics/visits-from-egypt-per-hour-today", analyticsHandlers.GetVisitsFromEgyptPerHourForToday)
 
 }

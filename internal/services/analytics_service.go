@@ -22,7 +22,7 @@ func NewDashboardAnalysisService(repo repositories.DashboardAnalysisRepositoryIn
 }
 
 // Example method to get top products visits
-func (s *DashboardAnalysisService) GetTopProductsVisits(ctx context.Context) (models.DashboardData, error) {
+func (s *DashboardAnalysisService) GetDashboardAnalytics(ctx context.Context) (models.DashboardData, error) {
 	var data models.DashboardData
 
 	// create an errgroup with context
@@ -116,4 +116,38 @@ func (s *DashboardAnalysisService) GetTopProductsVisits(ctx context.Context) (mo
 	}
 
 	return data, nil
+}
+func (s *DashboardAnalysisService) GetTopProductsVisits(ctx context.Context) ([]models.ProductVisitStat, error) {
+	return s.analytticsRepo.GetTopProductsVisits(ctx)
+}
+
+func (s *DashboardAnalysisService) GetVisitsPerDay(ctx context.Context) ([]models.VisitsPerDayData, error) {
+	return s.analytticsRepo.GetVisitsPerDay(ctx)
+}
+
+func (s *DashboardAnalysisService) GetVisitsPerMonth(ctx context.Context) ([]models.VisitsPerMonthData, error) {
+	return s.analytticsRepo.GetVisitsPerMonth(ctx)
+}
+
+func (s *DashboardAnalysisService) GetVisitsPerCountry(ctx context.Context) ([]models.VisitsPerCountryData, error) {
+	return s.analytticsRepo.GetVisitsPerCountry(ctx)
+}
+
+func (s *DashboardAnalysisService) GetVisitsPerCity(ctx context.Context) ([]models.VisitsPerCityData, error) {
+	return s.analytticsRepo.GetVisitsPerCity(ctx)
+}
+
+func (s *DashboardAnalysisService) GetVisitsFromEgyptPerDay(ctx context.Context) ([]models.VisitsFromEgyptData, error) {
+	return s.analytticsRepo.GetVisitsFromEgyptPerDay(ctx)
+}
+
+func (s *DashboardAnalysisService) GetVisitsFromOtherCountriesPerDay(ctx context.Context) ([]models.VisitsFromCountriesData, error) {
+	return s.analytticsRepo.GetVisitsFromOtherCountriesPerDay(ctx)
+}
+
+func (s *DashboardAnalysisService) GetVisitsFromEgyptPerHourForPastMonth(ctx context.Context) ([]models.VisitsFromEgyptHoursData, error) {
+	return s.analytticsRepo.GetVisitsFromEgyptPerHourForPastMonth(ctx)
+}
+func (s *DashboardAnalysisService) GetVisitsFromEgyptPerHourForToday(ctx context.Context) ([]models.VisitsFromEgyptHoursData, error) {
+	return s.analytticsRepo.GetVisitsFromEgyptPerHourForToday(ctx)
 }
