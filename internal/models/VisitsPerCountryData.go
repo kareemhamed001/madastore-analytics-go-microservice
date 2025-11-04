@@ -1,6 +1,8 @@
 package models
 
+import "database/sql"
+
 type VisitsPerCountryData struct {
-	Country string `json:"country"`
-	Total   int    `json:"total"`
+	Country sql.NullString `json:"country"`
+	Total   int            `json:"total"`
 }
