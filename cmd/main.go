@@ -42,7 +42,7 @@ func main() {
 	registerRoutes(router, db)
 
 	log.Printf("Starting server on port %s...", config.ServerPort)
-	if err := router.Run(":" + config.ServerPort); err != nil {
+	if err := router.Run("0.0.0.0:" + config.ServerPort); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
 
