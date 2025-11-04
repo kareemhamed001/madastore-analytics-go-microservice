@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"database/sql"
 	"encoding/json"
 	"net/http"
 )
@@ -15,4 +16,13 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 		return
 	}
 	w.Write(jsonData)
+}
+
+type NullString sql.NullString
+
+func (ns NullString) MarshalJSON() ([]byte, error) {
+	if !ns.Valid {
+		return json.Marshal(nil)
+	}
+	return json.Marshal(ns.String)
 }

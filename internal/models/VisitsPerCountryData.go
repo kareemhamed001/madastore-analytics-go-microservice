@@ -1,8 +1,8 @@
 package models
 
-import "database/sql"
+import "madastore/analytics/internal/utils"
 
 type VisitsPerCountryData struct {
-	Country sql.NullString `json:"country"`
-	Total   int            `json:"total"`
+	Country utils.NullString `json:"country"`
+	Total   int              `json:"total"`
 }
