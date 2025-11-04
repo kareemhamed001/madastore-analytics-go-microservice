@@ -2,6 +2,7 @@ package utils
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"encoding/json"
 	"net/http"
 )
@@ -18,8 +19,24 @@ func RespondWithJSON(w http.ResponseWriter, statusCode int, data interface{}) {
 	w.Write(jsonData)
 }
 
-type NullString sql.NullString
+type NullString struct {
+	sql.NullString
+}
 
+// Implement sql.Scanner (so you can scan DB rows into it)
+func (ns *NullString) Scan(value interface{}) error {
+	return ns.NullString.Scan(value)
+}
+
+// Implement driver.Valuer (optional, for inserts/updates)
+func (ns NullString) Value() (driver.Value, error) {
+	if !ns.Valid {
+		return nil, nil
+	}
+	return ns.String, nil
+}
+
+// Implement JSON marshalling (so output is "value" or null)
 func (ns NullString) MarshalJSON() ([]byte, error) {
 	if !ns.Valid {
 		return json.Marshal(nil)
