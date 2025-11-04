@@ -1,0 +1,68 @@
+package main
+
+import (
+	"log"
+	"madastore/analytics/internal/config"
+	"madastore/analytics/internal/handlers"
+	repositories "madastore/analytics/internal/repository"
+	"madastore/analytics/internal/services"
+	"net/http"
+
+	"database/sql"
+
+	"github.com/gin-gonic/gin"
+	_ "github.com/go-sql-driver/mysql"
+)
+
+func main() {
+	config := config.Load()
+
+	if config.Environment == "production" {
+		gin.SetMode(gin.ReleaseMode)
+	}
+	if config.DatabaseDSN == "" {
+		log.Fatal("DATABASE_URL is not set")
+	}
+
+	db, err := sql.Open("mysql", config.DatabaseDSN)
+	if err != nil {
+		panic(err)
+	}
+
+	defer db.Close()
+
+	err = db.Ping()
+
+	if err != nil {
+		panic(err)
+	}
+
+	router := gin.Default()
+
+	registerRoutes(router, db)
+
+	log.Printf("Starting server on port %s...", config.ServerPort)
+	if err := router.Run(":" + config.ServerPort); err != nil {
+		log.Fatalf("Failed to run server: %v", err)
+	}
+
+}
+
+func registerRoutes(router *gin.Engine, db *sql.DB) {
+
+	analyticsRepo := repositories.NewDashboardAnalysisRepository(db)
+	analyticsService := services.NewDashboardAnalysisService(analyticsRepo)
+	analyticsHandlers := handlers.NewAnalyticsHandlers(analyticsService)
+
+	router.GET("/health", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{"status": "OK"})
+	})
+
+	api := router.Group("/api/v1")
+
+	api.GET("/stats", func(ctx *gin.Context) {
+		ctx.JSON(http.StatusOK, gin.H{"message": "Stats endpoint"})
+	})
+	api.GET("analytics", analyticsHandlers.GetDashboardData)
+
+}
