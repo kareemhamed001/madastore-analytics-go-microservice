@@ -22,6 +22,7 @@ func (r *DashboardAnalysisRepository) GetTopProductsVisits(ctx context.Context) 
 FROM visits
 WHERE page_url IS NOT NULL
   AND page_url LIKE '%product/%'
+  AND created_at >= NOW() - INTERVAL 30 DAY
 GROUP BY page_url
 ORDER BY total DESC
 LIMIT 20;
@@ -55,15 +56,11 @@ LIMIT 20;
 
 func (r *DashboardAnalysisRepository) GetVisitsPerDay(ctx context.Context) ([]models.VisitsPerDayData, error) {
 	query := `
-	SELECT 
-			DATE(created_at) AS date,
-			COUNT(DISTINCT ip) AS total
-		FROM visits
-	
-		GROUP BY DATE(created_at)
-		ORDER BY DATE(created_at) ASC
-		LIMIT 30;
-	
+	SELECT date, SUM(total_visits) AS total
+	FROM visits_summary
+	WHERE date >= CURRENT_DATE - INTERVAL 30 DAY
+	GROUP BY date
+	ORDER BY date ASC;
 	`
 
 	rows, err := r.db.QueryContext(ctx, query)
@@ -91,13 +88,12 @@ func (r *DashboardAnalysisRepository) GetVisitsPerDay(ctx context.Context) ([]mo
 func (r *DashboardAnalysisRepository) GetVisitsPerMonth(ctx context.Context) ([]models.VisitsPerMonthData, error) {
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT 
-    DATE_FORMAT(created_at, '%Y-%m') AS month,
-    COUNT(DISTINCT ip) AS total
-FROM visits
-WHERE created_at >= CURDATE() - INTERVAL 12 MONTH
-GROUP BY DATE_FORMAT(created_at, '%Y-%m')
-ORDER BY month ASC;
-`)
+			MONTH(date) AS month,
+			SUM(total_visits) AS total
+		FROM visits_summary
+		WHERE date >= CURRENT_DATE - INTERVAL 12 MONTH
+		GROUP BY MONTH(date)
+		ORDER BY MONTH(date) ASC;`)
 	if err != nil {
 		return []models.VisitsPerMonthData{}, err
 	}
@@ -117,14 +113,11 @@ ORDER BY month ASC;
 
 func (r *DashboardAnalysisRepository) GetVisitsPerCountry(ctx context.Context) ([]models.VisitsPerCountryData, error) {
 	query := `
-	SELECT 
-			country,
-			COUNT(DISTINCT ip) AS total
-		FROM visits
-		WHERE country IS NOT NULL AND country != ''
+	SELECT country, SUM(total_visits) AS total
+		FROM visits_summary
 		GROUP BY country
 		ORDER BY total DESC
-		LIMIT 40;
+		LIMIT 40
 	`
 
 	rows, err := r.db.QueryContext(ctx, query)
@@ -181,15 +174,12 @@ func (r *DashboardAnalysisRepository) GetVisitsPerCity(ctx context.Context) ([]m
 
 func (r *DashboardAnalysisRepository) GetVisitsFromEgyptPerDay(ctx context.Context) ([]models.VisitsFromEgyptData, error) {
 	query := `
-	SELECT 
-			DATE(created_at) AS date,
-			COUNT(DISTINCT ip) AS total
-		FROM visits
-		WHERE country = 'Egypt'
-		  
-		GROUP BY DATE(created_at)
-		ORDER BY DATE(created_at) ASC;
-		
+	SELECT date, SUM(total_visits) AS total
+	FROM visits_summary
+	WHERE country = 'Egypt'
+	AND date >= CURRENT_DATE - INTERVAL 30 DAY
+	GROUP BY date
+	ORDER BY date ASC;
 		`
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
@@ -215,14 +205,12 @@ func (r *DashboardAnalysisRepository) GetVisitsFromEgyptPerDay(ctx context.Conte
 
 func (r *DashboardAnalysisRepository) GetVisitsFromOtherCountriesPerDay(ctx context.Context) ([]models.VisitsFromCountriesData, error) {
 	query := `
-	SELECT 
-			DATE(created_at) AS date,
-			COUNT(DISTINCT ip) AS total
-		FROM visits
-		WHERE (country IS NULL OR country != 'Egypt')
-		  
-		GROUP BY DATE(created_at)
-		ORDER BY DATE(created_at) ASC;`
+	SELECT date, SUM(total_visits) AS total
+	FROM visits_summary
+	WHERE (country IS NULL OR country != 'Egypt')
+	AND date >= CURRENT_DATE - INTERVAL 30 DAY
+	GROUP BY date
+	ORDER BY date ASC;`
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -251,7 +239,8 @@ func (r *DashboardAnalysisRepository) GetVisitsFromEgyptPerHourForPastMonth(ctx 
     HOUR(created_at) AS hour, 
     COUNT(DISTINCT ip) AS total
 FROM visits
-WHERE  country_code = 'EG'
+WHERE created_at >= NOW() - INTERVAL 30 DAY
+  AND country_code = 'EG'
 GROUP BY HOUR(created_at)
 ORDER BY HOUR(created_at) ASC;
 
