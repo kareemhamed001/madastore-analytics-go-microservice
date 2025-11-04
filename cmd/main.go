@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"log"
 	"madastore/analytics/internal/config"
 	"madastore/analytics/internal/handlers"
 	repositories "madastore/analytics/internal/repository"
 	"madastore/analytics/internal/services"
 	"net/http"
+	"time"
 
 	"database/sql"
 
@@ -73,5 +75,37 @@ func registerRoutes(router *gin.Engine, db *sql.DB) {
 	api.GET("analytics/visits-from-other-countries-per-day", analyticsHandlers.GetVisitsFromOtherCountriesPerDay)
 	api.GET("analytics/visits-from-egypt-per-hour-past-month", analyticsHandlers.GetVisitsFromEgyptPerHourForPastMonth)
 	api.GET("analytics/visits-from-egypt-per-hour-today", analyticsHandlers.GetVisitsFromEgyptPerHourForToday)
+
+	go func() {
+		ticker := time.NewTicker(5 * time.Minute)
+		defer ticker.Stop()
+
+		for {
+			<-ticker.C
+			log.Println("⏱  Refreshing analytics cache...")
+
+			ctx := context.Background()
+
+			// call all the service methods to refresh caches
+			if _, err := analyticsService.GetTopProductsVisits(ctx); err != nil {
+				log.Println("Error refreshing top products:", err)
+			}
+			if _, err := analyticsService.GetVisitsPerDay(ctx); err != nil {
+				log.Println("Error refreshing visits per day:", err)
+			}
+			if _, err := analyticsService.GetVisitsPerMonth(ctx); err != nil {
+				log.Println("Error refreshing visits per month:", err)
+			}
+			if _, err := analyticsService.GetVisitsPerCountry(ctx); err != nil {
+				log.Println("Error refreshing visits per country:", err)
+			}
+			if _, err := analyticsService.GetVisitsFromEgyptPerDay(ctx); err != nil {
+				log.Println("Error refreshing visits from Egypt:", err)
+			}
+			if _, err := analyticsService.GetVisitsFromOtherCountriesPerDay(ctx); err != nil {
+				log.Println("Error refreshing visits from other countries:", err)
+			}
+		}
+	}()
 
 }
