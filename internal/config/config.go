@@ -11,6 +11,7 @@ type Config struct {
 	Environment string
 	ServerPort  string
 	DatabaseDSN string
+	ApiKey      string
 }
 
 func Load() *Config {
@@ -20,6 +21,7 @@ func Load() *Config {
 		Environment: getEnv("Environment", "development"),
 		ServerPort:  getEnv("ServerPort", "8080"),
 		DatabaseDSN: getEnv("DatabaseDSN", ""),
+		ApiKey:      getEnv("API_KEY", ""),
 	}
 }
 

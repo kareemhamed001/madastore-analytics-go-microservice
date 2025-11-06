@@ -5,6 +5,7 @@ import (
 	"log"
 	"madastore/analytics/internal/config"
 	"madastore/analytics/internal/handlers"
+	"madastore/analytics/internal/middleware"
 	repositories "madastore/analytics/internal/repository"
 	"madastore/analytics/internal/services"
 	"net/http"
@@ -60,7 +61,7 @@ func registerRoutes(router *gin.Engine, db *sql.DB) {
 		ctx.JSON(http.StatusOK, gin.H{"status": "OK"})
 	})
 
-	api := router.Group("/api/v1")
+	api := router.Group("/api/v1", middleware.CheckApiKeyMiddleware)
 
 	api.GET("/stats", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, gin.H{"message": "Stats endpoint"})
