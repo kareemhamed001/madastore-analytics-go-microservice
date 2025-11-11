@@ -45,7 +45,19 @@ func main() {
 	registerRoutes(router, db)
 
 	log.Printf("Starting server on port %s...", config.ServerPort)
-	if err := router.Run("0.0.0.0:" + config.ServerPort); err != nil {
+
+	srv := &http.Server{
+		Addr:              "0.0.0.0:" + config.ServerPort,
+		Handler:           router,
+		ReadTimeout:       120 * time.Second, // max time to read request
+		WriteTimeout:      120 * time.Second, // max time to write response
+		IdleTimeout:       60 * time.Second,  // max keep-alive time
+		ReadHeaderTimeout: 5 * time.Second,   // header read timeout
+	}
+
+	// Start the server
+
+	if err := srv.ListenAndServe(); err != nil {
 		log.Fatalf("Failed to run server: %v", err)
 	}
 

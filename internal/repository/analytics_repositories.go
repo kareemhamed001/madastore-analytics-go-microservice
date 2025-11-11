@@ -146,9 +146,10 @@ func (r *DashboardAnalysisRepository) GetVisitsPerCity(ctx context.Context) ([]m
 	query := `	
 	SELECT city, COUNT(DISTINCT ip) AS total
 		FROM visits
+		WHERE country_code = 'EG'
 		GROUP BY city
 		ORDER BY total DESC
-		LIMIT 50
+		LIMIT 30
 		`
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
