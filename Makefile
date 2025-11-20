@@ -37,3 +37,16 @@ docker-compose-up: prepare
 # Stop docker-compose
 docker-compose-down:
 	docker-compose down
+
+PROTOC = protoc
+PROTO_DIR = proto
+OUT_DIR = common/genproto/analytics
+PROTO_FILE = analytics.proto
+
+protoc-gen:
+	@echo "🚀 Generating Go and gRPC code from $(PROTO_FILE)..."
+	@$(PROTOC) \
+		--proto_path=$(PROTO_DIR) $(PROTO_DIR)/$(PROTO_FILE) \
+		--go_out=$(OUT_DIR) --go_opt=paths=source_relative \
+		--go-grpc_out=$(OUT_DIR) --go-grpc_opt=paths=source_relative
+	@echo "✅ Generation complete! Files saved in $(OUT_DIR)"

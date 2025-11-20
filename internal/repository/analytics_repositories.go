@@ -22,7 +22,7 @@ func (r *DashboardAnalysisRepository) GetTopProductsVisits(ctx context.Context) 
 FROM visits
 WHERE page_url IS NOT NULL
   AND page_url LIKE '%product/%'
-  AND created_at >= NOW() - INTERVAL 30 DAY
+  
 GROUP BY page_url
 ORDER BY total DESC
 LIMIT 20;
@@ -172,6 +172,40 @@ func (r *DashboardAnalysisRepository) GetVisitsPerCity(ctx context.Context) ([]m
 	}
 	return visitsData, nil
 }
+
+
+func (r *DashboardAnalysisRepository) GetVisitsPerCityForToday(ctx context.Context) ([]models.VisitsPerCityData, error) {
+	query := `	
+	SELECT city, COUNT(DISTINCT ip) AS total
+		FROM visits
+		WHERE country_code = 'EG'
+		AND created_at >= CURDATE()	
+		GROUP BY city
+		ORDER BY total DESC
+		LIMIT 30
+		`
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var visitsData []models.VisitsPerCityData
+	for rows.Next() {
+		var data models.VisitsPerCityData
+		err := rows.Scan(&data.City, &data.Total)
+		if err != nil {
+			return nil, err
+		}
+		visitsData = append(visitsData, data)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return visitsData, nil
+}
+
 
 func (r *DashboardAnalysisRepository) GetVisitsFromEgyptPerDay(ctx context.Context) ([]models.VisitsFromEgyptData, error) {
 	query := `

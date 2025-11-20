@@ -12,6 +12,7 @@ type Config struct {
 	ServerPort  string
 	DatabaseDSN string
 	ApiKey      string
+	GRPCPort    string
 }
 
 func Load() *Config {
@@ -22,6 +23,7 @@ func Load() *Config {
 		ServerPort:  getEnv("ServerPort", "8080"),
 		DatabaseDSN: getEnv("DatabaseDSN", ""),
 		ApiKey:      getEnv("API_KEY", ""),
+		GRPCPort:    getEnv("GRPC_PORT", "9090"),
 	}
 }
 

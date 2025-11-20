@@ -216,6 +216,25 @@ func (s *DashboardAnalysisService) GetVisitsPerCity(ctx context.Context) ([]mode
 	return data, nil
 }
 
+
+func (s *DashboardAnalysisService) GetVisitsPerCityForToday(ctx context.Context) ([]models.VisitsPerCityData, error) {
+	var data []models.VisitsPerCityData
+	cacheKey := "analytics:visits_per_city_for_today"
+
+	if ok, err := utils.GetCache(cacheKey, &data); err == nil && ok {
+		return data, nil
+	}
+
+	data, err := s.analytticsRepo.GetVisitsPerCityForToday(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	_ = utils.SetCache(cacheKey, data, 5*time.Minute)
+	return data, nil
+}
+
+
 func (s *DashboardAnalysisService) GetVisitsFromEgyptPerDay(ctx context.Context) ([]models.VisitsFromEgyptData, error) {
 	var data []models.VisitsFromEgyptData
 	cacheKey := "analytics:visits_from_egypt_per_day"

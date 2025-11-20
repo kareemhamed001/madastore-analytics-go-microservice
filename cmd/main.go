@@ -8,6 +8,7 @@ import (
 	"madastore/analytics/internal/middleware"
 	repositories "madastore/analytics/internal/repository"
 	"madastore/analytics/internal/services"
+	"madastore/analytics/internal/types"
 	"net/http"
 	"time"
 
@@ -43,6 +44,13 @@ func main() {
 	router := gin.Default()
 
 	registerRoutes(router, db)
+
+	grpcServer := types.NewGRPCServer(":" + config.GRPCPort)
+	go func() {
+		if err := grpcServer.Run(db); err != nil {
+			log.Fatalf("Failed to start gRPC server: %v", err)
+		}
+	}()
 
 	log.Printf("Starting server on port %s...", config.ServerPort)
 
@@ -84,6 +92,7 @@ func registerRoutes(router *gin.Engine, db *sql.DB) {
 	api.GET("analytics/visits-per-month", analyticsHandlers.GetVisitsPerMonth)
 	api.GET("analytics/visits-per-country", analyticsHandlers.GetVisitsPerCountry)
 	api.GET("analytics/visits-per-city", analyticsHandlers.GetVisitsPerCity)
+	api.GET("analytics/visits-per-city-today", analyticsHandlers.GetVisitsPerCityForToday)
 	api.GET("analytics/visits-from-egypt-per-day", analyticsHandlers.GetVisitsFromEgyptPerDay)
 	api.GET("analytics/visits-from-other-countries-per-day", analyticsHandlers.GetVisitsFromOtherCountriesPerDay)
 	api.GET("analytics/visits-from-egypt-per-hour-past-month", analyticsHandlers.GetVisitsFromEgyptPerHourForPastMonth)

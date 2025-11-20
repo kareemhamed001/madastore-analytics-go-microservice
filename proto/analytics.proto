@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package analytics;
+option go_package = "madastore/analytics";
+
+
+
+service AnalyticsService {
+    rpc TopProductsVisits(TopProductsVisitsRequest) returns (TopProductsVisitsResponse);
+    rpc VisitsPerDay(VisitsPerDayRequest) returns (VisitsPerDayResponse);
+    rpc VisitsPerMonth(VisitsPerMonthRequest) returns (VisitsPerMonthResponse); 
+    rpc VisitsPerCountry(VisitsPerCountryRequest) returns (VisitsPerCountryResponse);
+    rpc VisitsPerCity(VisitsPerCityRequest) returns (VisitsPerCityResponse);
+    rpc VisitsFromEgyptPerDay(VisitsFromEgyptPerDayRequest) returns (VisitsFromEgyptPerDayResponse);
+    rpc VisitsFromOtherCountriesPerDay(VisitsFromOtherCountriesPerDayRequest) returns (VisitsFromOtherCountriesPerDayResponse);
+    rpc VisitsFromEgyptPerHourForPastMonth(VisitsFromEgyptPerHourPastMonthRequest) returns (VisitsFromEgyptPerHourPastMonthResponse);
+    rpc VisitsFromEgyptPerHourForToday(VisitsFromEgyptPerHourTodayRequest) returns (VisitsFromEgyptPerHourTodayResponse);
+}
+
+message TopProductsVisitsRequest {
+    int32 limit = 1;
+}
+message TopProductsVisitsResponse {
+    repeated ProductVisit product_visits = 1;
+}   
+message ProductVisit {
+    string PageURL = 1;
+    int32 Total = 2;
+}
+
+message VisitsPerDayRequest {}
+
+message VisitsPerDayResponse {
+    repeated DayVisit day_visits = 1;
+}
+message DayVisit {
+    string Date = 1;
+    int32 Total = 2;
+}
+
+
+
+message VisitsPerMonthRequest {}
+
+message VisitsPerMonthResponse {
+    repeated MonthVisit month_visits = 1;
+}
+message MonthVisit {
+    string Month = 1;   
+    int32 Total = 2;
+}
+
+message VisitsPerCountryRequest {}      
+message VisitsPerCountryResponse {
+    repeated CountryVisit country_visits = 1;
+}
+message CountryVisit {
+    string Country = 1;
+    int32 Total = 2;
+}
+message VisitsPerCityRequest {}
+message VisitsPerCityResponse {
+    repeated CityVisit city_visits = 1;
+}   
+message CityVisit {
+    string City = 1;
+    int32 Total = 2;
+}
+message VisitsFromEgyptPerDayRequest {} 
+message VisitsFromEgyptPerDayResponse {
+    repeated DayVisit day_visits = 1;
+}   
+message VisitsFromOtherCountriesPerDayRequest {}    
+message VisitsFromOtherCountriesPerDayResponse {
+    repeated DayVisit day_visits = 1;
+}   
+message VisitsFromEgyptPerHourPastMonthRequest {}
+message VisitsFromEgyptPerHourPastMonthResponse {
+    repeated HourVisit hour_visits = 1;
+}   
+message HourVisit {
+    string Hour = 1;
+    int32 Total = 2;
+}
+message VisitsFromEgyptPerHourTodayRequest {}   
+message VisitsFromEgyptPerHourTodayResponse {
+    repeated HourVisit hour_visits = 1;
+}
+

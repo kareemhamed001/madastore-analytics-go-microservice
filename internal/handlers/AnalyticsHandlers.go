@@ -45,6 +45,7 @@ func (h *AnalyticsHandlers) GetVisitsPerDay(c *gin.Context) {
 	}
 	utils.RespondWithJSON(c.Writer, http.StatusOK, data)
 }
+
 func (h *AnalyticsHandlers) GetVisitsPerMonth(c *gin.Context) {
 	data, err := h.analyticsService.GetVisitsPerMonth(c.Request.Context())
 	if err != nil {
@@ -64,6 +65,15 @@ func (h *AnalyticsHandlers) GetVisitsPerCountry(c *gin.Context) {
 
 func (h *AnalyticsHandlers) GetVisitsPerCity(c *gin.Context) {
 	data, err := h.analyticsService.GetVisitsPerCity(c.Request.Context())
+	if err != nil {
+		utils.RespondWithJSON(c.Writer, http.StatusInternalServerError, map[string]string{"error": err.Error()})
+		return
+	}
+	utils.RespondWithJSON(c.Writer, http.StatusOK, data)
+}
+
+func (h *AnalyticsHandlers) GetVisitsPerCityForToday(c *gin.Context) {
+	data, err := h.analyticsService.GetVisitsPerCityForToday(c.Request.Context())
 	if err != nil {
 		utils.RespondWithJSON(c.Writer, http.StatusInternalServerError, map[string]string{"error": err.Error()})
 		return
