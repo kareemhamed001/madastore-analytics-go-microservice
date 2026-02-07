@@ -1,20 +1,19 @@
 package middleware
 
 import (
-	"madastore/analytics/internal/config"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
 
-func CheckApiKeyMiddleware(c *gin.Context) {
-	apiKey := c.GetHeader("X-API-KEY")
-	expectedApiKey := config.Load().ApiKey // Replace with your actual expected API key
+func CheckApiKeyMiddleware(expectedApiKey string) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		apiKey := c.GetHeader("X-API-KEY")
+		if apiKey != expectedApiKey {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+			return
+		}
 
-	if apiKey != expectedApiKey {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
-		return
+		c.Next()
 	}
-
-	c.Next()
 }

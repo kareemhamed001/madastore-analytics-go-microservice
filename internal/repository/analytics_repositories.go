@@ -4,17 +4,28 @@ import (
 	"context"
 	"database/sql"
 	"madastore/analytics/internal/models"
+	"time"
 )
 
 type DashboardAnalysisRepository struct {
-	db *sql.DB
+	db           *sql.DB
+	queryTimeout time.Duration
 }
 
-func NewDashboardAnalysisRepository(db *sql.DB) *DashboardAnalysisRepository {
-	return &DashboardAnalysisRepository{db: db}
+func NewDashboardAnalysisRepository(db *sql.DB, queryTimeout time.Duration) *DashboardAnalysisRepository {
+	return &DashboardAnalysisRepository{db: db, queryTimeout: queryTimeout}
+}
+
+func (r *DashboardAnalysisRepository) withQueryTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
+	if r.queryTimeout <= 0 {
+		return ctx, func() {}
+	}
+	return context.WithTimeout(ctx, r.queryTimeout)
 }
 
 func (r *DashboardAnalysisRepository) GetTopProductsVisits(ctx context.Context) ([]models.ProductVisitStat, error) {
+	ctx, cancel := r.withQueryTimeout(ctx)
+	defer cancel()
 	query := `
 	SELECT 
     page_url, 
@@ -25,7 +36,7 @@ WHERE page_url IS NOT NULL
   
 GROUP BY page_url
 ORDER BY total DESC
-LIMIT 20;
+LIMIT 10;
 
 	`
 
@@ -55,6 +66,8 @@ LIMIT 20;
 }
 
 func (r *DashboardAnalysisRepository) GetVisitsPerDay(ctx context.Context) ([]models.VisitsPerDayData, error) {
+	ctx, cancel := r.withQueryTimeout(ctx)
+	defer cancel()
 	query := `
 	SELECT date, SUM(total_visits) AS total
 	FROM visits_summary
@@ -86,6 +99,8 @@ func (r *DashboardAnalysisRepository) GetVisitsPerDay(ctx context.Context) ([]mo
 
 }
 func (r *DashboardAnalysisRepository) GetVisitsPerMonth(ctx context.Context) ([]models.VisitsPerMonthData, error) {
+	ctx, cancel := r.withQueryTimeout(ctx)
+	defer cancel()
 	rows, err := r.db.QueryContext(ctx, `
 		SELECT 
 			MONTH(date) AS month,
@@ -112,6 +127,8 @@ func (r *DashboardAnalysisRepository) GetVisitsPerMonth(ctx context.Context) ([]
 }
 
 func (r *DashboardAnalysisRepository) GetVisitsPerCountry(ctx context.Context) ([]models.VisitsPerCountryData, error) {
+	ctx, cancel := r.withQueryTimeout(ctx)
+	defer cancel()
 	query := `
 	SELECT country, SUM(total_visits) AS total
 		FROM visits_summary
@@ -143,6 +160,8 @@ func (r *DashboardAnalysisRepository) GetVisitsPerCountry(ctx context.Context) (
 }
 
 func (r *DashboardAnalysisRepository) GetVisitsPerCity(ctx context.Context) ([]models.VisitsPerCityData, error) {
+	ctx, cancel := r.withQueryTimeout(ctx)
+	defer cancel()
 	query := `	
 	SELECT city, COUNT(DISTINCT ip) AS total
 		FROM visits
@@ -173,8 +192,9 @@ func (r *DashboardAnalysisRepository) GetVisitsPerCity(ctx context.Context) ([]m
 	return visitsData, nil
 }
 
-
 func (r *DashboardAnalysisRepository) GetVisitsPerCityForToday(ctx context.Context) ([]models.VisitsPerCityData, error) {
+	ctx, cancel := r.withQueryTimeout(ctx)
+	defer cancel()
 	query := `	
 	SELECT city, COUNT(DISTINCT ip) AS total
 		FROM visits
@@ -206,8 +226,9 @@ func (r *DashboardAnalysisRepository) GetVisitsPerCityForToday(ctx context.Conte
 	return visitsData, nil
 }
 
-
 func (r *DashboardAnalysisRepository) GetVisitsFromEgyptPerDay(ctx context.Context) ([]models.VisitsFromEgyptData, error) {
+	ctx, cancel := r.withQueryTimeout(ctx)
+	defer cancel()
 	query := `
 	SELECT date, SUM(total_visits) AS total
 	FROM visits_summary
@@ -239,6 +260,8 @@ func (r *DashboardAnalysisRepository) GetVisitsFromEgyptPerDay(ctx context.Conte
 }
 
 func (r *DashboardAnalysisRepository) GetVisitsFromOtherCountriesPerDay(ctx context.Context) ([]models.VisitsFromCountriesData, error) {
+	ctx, cancel := r.withQueryTimeout(ctx)
+	defer cancel()
 	query := `
 	SELECT date, SUM(total_visits) AS total
 	FROM visits_summary
@@ -269,6 +292,8 @@ func (r *DashboardAnalysisRepository) GetVisitsFromOtherCountriesPerDay(ctx cont
 }
 
 func (r *DashboardAnalysisRepository) GetVisitsFromEgyptPerHourForPastMonth(ctx context.Context) ([]models.VisitsFromEgyptHoursData, error) {
+	ctx, cancel := r.withQueryTimeout(ctx)
+	defer cancel()
 	query := `
 	SELECT 
     HOUR(created_at) AS hour, 
@@ -301,6 +326,8 @@ ORDER BY HOUR(created_at) ASC;
 	return visitsData, nil
 }
 func (r *DashboardAnalysisRepository) GetVisitsFromEgyptPerHourForToday(ctx context.Context) ([]models.VisitsFromEgyptHoursData, error) {
+	ctx, cancel := r.withQueryTimeout(ctx)
+	defer cancel()
 	query := `
 	SELECT 
 			HOUR(created_at) AS hour,

@@ -1,43 +1,47 @@
 package types
 
 import (
-	"database/sql"
-	"log"
 	"madastore/analytics/common/genproto/analytics"
 	handlers "madastore/analytics/internal/handlers/analytics"
-	repositories "madastore/analytics/internal/repository"
 	"madastore/analytics/internal/services"
 	"net"
 
+	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc"
 )
 
-type gRPCServer struct {
-	addr string
+type GRPCServer struct {
+	addr             string
+	server           *grpc.Server
+	lis              net.Listener
+	analyticsService *services.DashboardAnalysisService
 }
 
-func NewGRPCServer(addr string) *gRPCServer {
-	return &gRPCServer{addr: addr}
+func NewGRPCServer(addr string, analyticsService *services.DashboardAnalysisService) *GRPCServer {
+	return &GRPCServer{addr: addr, analyticsService: analyticsService}
 }
 
-func (s *gRPCServer) Run(db *sql.DB) error {
-
+func (s *GRPCServer) Run() error {
 	lis, err := net.Listen("tcp", s.addr)
-
 	if err != nil {
-		log.Fatalf("Failed to listen: %v", err)
-
+		return err
 	}
-	server := grpc.NewServer()
+	s.lis = lis
+	s.server = grpc.NewServer()
 
 	//register services
-	analyticsRepo := repositories.NewDashboardAnalysisRepository(db)
-	analyticsService := services.NewDashboardAnalysisService(analyticsRepo)
-	analyticsHandlers := handlers.NewAnalyticsGrpcHandler(server, analyticsService)
+	analyticsHandlers := handlers.NewAnalyticsGrpcHandler(s.server, s.analyticsService)
 
-	analytics.RegisterAnalyticsServiceServer(server, analyticsHandlers)
+	analytics.RegisterAnalyticsServiceServer(s.server, analyticsHandlers)
 
-	log.Println("gRPC server is running on", s.addr)
+	log.Info().Str("addr", s.addr).Msg("grpc server is running")
 
-	return server.Serve(lis)
+	return s.server.Serve(lis)
+}
+
+func (s *GRPCServer) Stop() {
+	if s.server == nil {
+		return
+	}
+	s.server.GracefulStop()
 }
